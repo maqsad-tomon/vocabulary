@@ -476,6 +476,65 @@ class VocabMasterController {
     this.updateStats();
   }
 
+  renderHeader() {
+    const topic = CURRICULUM_TOPICS.find(t => t.day === this.currentDay) || {
+      title: `${this.currentDay}-Kun`,
+      category: "Lug'at",
+      level: "B1"
+    };
+
+    const learned = this.dayWords.filter(w => storageDriver.isLearned(w.id)).length;
+    const percent = Math.round((learned / 100) * 100);
+
+    const badge = document.getElementById('current-day-badge');
+    const title = document.getElementById('current-day-title');
+    const category = document.getElementById('current-day-category');
+    const progressText = document.getElementById('day-progress-text');
+    const progressBar = document.getElementById('day-progress-bar');
+
+    if (badge) badge.innerText = `${this.currentDay}-Kun • ${topic.level}`;
+    if (title) title.innerText = `${this.currentDay}-Kun: ${topic.title}`;
+    if (category) category.innerText = `Mavzu: ${topic.category}`;
+    if (progressText) progressText.innerText = `${learned} / 100 so'z (${percent}%)`;
+    if (progressBar) progressBar.style.width = `${percent}%`;
+
+    if (percent === 100 && !storageDriver.stats.completedDays.includes(this.currentDay)) {
+      storageDriver.stats.completedDays.push(this.currentDay);
+      storageDriver.stats.xp += 100;
+      storageDriver.save();
+      audioDriver.playFanfare();
+      if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 70 });
+    }
+  }
+
+  renderMode() {
+    const modes = ['study', 'flashcard', 'quiz', 'speedmatch', 'spelling'];
+    modes.forEach(m => {
+      const btn = document.getElementById(`mode-btn-${m}`);
+      if (btn) {
+        if (m === this.activeMode) {
+          btn.className = 'px-4 py-2.5 rounded-xl font-semibold text-sm transition bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 flex items-center gap-2';
+        } else {
+          btn.className = 'px-4 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center gap-2';
+        }
+      }
+    });
+
+    const content = document.getElementById('mode-content-area');
+    if (!content) return;
+    content.innerHTML = '';
+
+    if (this.activeMode === 'study') this.renderStudy(content);
+    else if (this.activeMode === 'flashcard') this.renderFlashcards(content);
+    else if (this.activeMode === 'quiz') this.renderQuiz(content);
+    else if (this.activeMode === 'speedmatch') this.renderSpeedMatch(content);
+    else if (this.activeMode === 'spelling') this.renderSpelling(content);
+
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  }
+
   getFilteredWords() {
     return this.dayWords;
   }
