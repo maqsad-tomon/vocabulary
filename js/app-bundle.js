@@ -477,165 +477,56 @@ class VocabMasterController {
   }
 
   getFilteredWords() {
-    let list = this.dayWords;
-    if (this.filterType === 'unlearned') list = list.filter(w => !storageDriver.isLearned(w.id));
-    else if (this.filterType === 'learned') list = list.filter(w => storageDriver.isLearned(w.id));
-    else if (this.filterType === 'difficult') list = list.filter(w => storageDriver.isDiff(w.id));
-    else if (this.filterType === 'favorites') list = list.filter(w => storageDriver.isFav(w.id));
-
-    if (this.currentChunk !== -1 && this.filterType === 'all') {
-      const start = this.currentChunk * 20;
-      return list.slice(start, start + 20);
-    }
-    return list;
+    return this.dayWords;
   }
 
-  renderHeader() {
-    const topic = CURRICULUM_TOPICS.find(t => t.day === this.currentDay) || {
-      title: `${this.currentDay}-Kun`,
-      category: "Lug'at",
-      level: "B1"
-    };
-
-    const learned = this.dayWords.filter(w => storageDriver.isLearned(w.id)).length;
-    const percent = Math.round((learned / 100) * 100);
-
-    const badge = document.getElementById('current-day-badge');
-    const title = document.getElementById('current-day-title');
-    const category = document.getElementById('current-day-category');
-    const progressText = document.getElementById('day-progress-text');
-    const progressBar = document.getElementById('day-progress-bar');
-
-    if (badge) badge.innerText = `${this.currentDay}-Kun • ${topic.level}`;
-    if (title) title.innerText = `${this.currentDay}-Kun: ${topic.title}`;
-    if (category) category.innerText = `Mavzu: ${topic.category}`;
-    if (progressText) progressText.innerText = `${learned} / 100 so'z (${percent}%)`;
-    if (progressBar) progressBar.style.width = `${percent}%`;
-
-    if (percent === 100 && !storageDriver.stats.completedDays.includes(this.currentDay)) {
-      storageDriver.stats.completedDays.push(this.currentDay);
-      storageDriver.stats.xp += 100;
-      storageDriver.save();
-      audioDriver.playFanfare();
-      if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 70 });
-    }
-  }
-
-  renderMode() {
-    const modes = ['study', 'flashcard', 'quiz', 'speedmatch', 'spelling'];
-    modes.forEach(m => {
-      const btn = document.getElementById(`mode-btn-${m}`);
-      if (btn) {
-        if (m === this.activeMode) {
-          btn.className = 'px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 flex items-center gap-2';
-        } else {
-          btn.className = 'px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center gap-2';
-        }
-      }
-    });
-
-    const content = document.getElementById('mode-content-area');
-    if (!content) return;
-    content.innerHTML = '';
-
-    if (this.activeMode === 'study') this.renderStudy(content);
-    else if (this.activeMode === 'flashcard') this.renderFlashcards(content);
-    else if (this.activeMode === 'quiz') this.renderQuiz(content);
-    else if (this.activeMode === 'speedmatch') this.renderSpeedMatch(content);
-    else if (this.activeMode === 'spelling') this.renderSpelling(content);
-
-    if (window.lucide) window.lucide.createIcons();
-  }
-
-  // 1. O'RGANISH REJIMI (STUDY MODE)
+  // 1. O'RGANISH REJIMI (TO'LIQ 100 TA SO'Z RO'YXATI)
   renderStudy(container) {
-    const words = this.getFilteredWords();
+    const words = this.dayWords;
 
-    const chunkButtons = [0, 1, 2, 3, 4].map(idx => {
-      const start = idx * 20 + 1;
-      const end = (idx + 1) * 20;
-      const chunkWords = this.dayWords.slice(idx * 20, (idx + 1) * 20);
-      const learned = chunkWords.filter(w => storageDriver.isLearned(w.id)).length;
-      const isActive = this.currentChunk === idx && this.filterType === 'all';
-
-      return `
-        <button onclick="window.app.setChunk(${idx})" class="px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 border ${
-          isActive ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700'
-        }">
-          <span>Blok ${idx + 1} (${start}-${end})</span>
-          <span class="px-1.5 py-0.5 rounded-full text-[10px] ${learned === 20 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700 text-slate-300'}">${learned}/20</span>
-        </button>
-      `;
-    }).join('');
-
-    const topFilterHtml = `
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-6 p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-md">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1">Bloklar:</span>
-          ${chunkButtons}
-          <button onclick="window.app.setChunk(-1)" class="px-3 py-2 rounded-xl text-xs font-semibold transition border ${
-            this.currentChunk === -1 && this.filterType === 'all' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700'
-          }">Barcha 100 ta</button>
-        </div>
-
-        <div class="flex items-center gap-1.5 bg-slate-900/60 p-1 rounded-xl border border-slate-700/60">
-          <button onclick="window.app.setFilter('all')" class="px-2.5 py-1.5 rounded-lg text-xs font-medium ${this.filterType === 'all' ? 'bg-slate-700 text-white' : 'text-slate-400'}">Barchasi</button>
-          <button onclick="window.app.setFilter('unlearned')" class="px-2.5 py-1.5 rounded-lg text-xs font-medium ${this.filterType === 'unlearned' ? 'bg-indigo-600 text-white' : 'text-slate-400'}">Yodlanmagan</button>
-          <button onclick="window.app.setFilter('learned')" class="px-2.5 py-1.5 rounded-lg text-xs font-medium ${this.filterType === 'learned' ? 'bg-emerald-600 text-white' : 'text-slate-400'}">Yodlangan</button>
-          <button onclick="window.app.setFilter('difficult')" class="px-2.5 py-1.5 rounded-lg text-xs font-medium ${this.filterType === 'difficult' ? 'bg-amber-600 text-white' : 'text-slate-400'}">Qiyin</button>
-          <button onclick="window.app.setFilter('favorites')" class="px-2.5 py-1.5 rounded-lg text-xs font-medium ${this.filterType === 'favorites' ? 'bg-rose-600 text-white' : 'text-slate-400'}">⭐ Sevimlilar</button>
-        </div>
-      </div>
-    `;
-
-    const cardsHtml = words.map(w => {
+    const cardsHtml = words.map((w, index) => {
       const isL = storageDriver.isLearned(w.id);
-      const isF = storageDriver.isFav(w.id);
-      const isD = storageDriver.isDiff(w.id);
 
       return `
-        <div class="glass-card p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between border ${isL ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-slate-700/60'}">
+        <div class="glass-card p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between border ${
+          isL ? 'border-emerald-500/40 bg-emerald-950/20' : 'border-slate-800 bg-slate-900/60'
+        }">
           <div>
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <div class="flex items-center gap-2">
-                  <h3 class="text-2xl font-bold tracking-tight text-white font-heading">${w.word}</h3>
-                  <button onclick="window.app.speak('${w.word}')" class="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition" title="Ovozli eshitish">
-                    <i data-lucide="volume-2" class="w-4 h-4"></i>
-                  </button>
-                  <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">${w.ipa}</span>
-                </div>
-                <span class="inline-block mt-1 text-[11px] font-semibold uppercase tracking-wider text-indigo-400">${w.partOfSpeech}</span>
-              </div>
-
-              <div class="flex items-center gap-1">
-                <button onclick="window.app.toggleFav(${w.id})" class="p-2 rounded-xl transition ${isF ? 'text-rose-400 bg-rose-500/10' : 'text-slate-400 hover:bg-slate-800'}">
-                  <i data-lucide="star" class="w-4 h-4 ${isF ? 'fill-current' : ''}"></i>
+            <!-- Header: Number, Word, Audio, IPA, POS -->
+            <div class="flex items-center justify-between gap-3 mb-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="w-7 h-7 rounded-xl bg-slate-800 text-indigo-400 text-xs font-bold font-mono flex items-center justify-center">#${index + 1}</span>
+                <h3 class="text-2xl font-bold tracking-tight text-white font-heading">${w.word}</h3>
+                <button onclick="window.app.speak('${w.word}')" class="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-600 hover:text-white transition" title="Ovozli eshitish">
+                  <i data-lucide="volume-2" class="w-4 h-4"></i>
                 </button>
-                <button onclick="window.app.toggleDiff(${w.id})" class="p-2 rounded-xl transition ${isD ? 'text-amber-400 bg-amber-500/10' : 'text-slate-400 hover:bg-slate-800'}">
-                  <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                </button>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">${w.ipa}</span>
               </div>
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-400">${w.partOfSpeech}</span>
             </div>
 
-            <div class="text-lg font-semibold text-emerald-400 mb-3">${w.uzbek}</div>
+            <!-- Uzbek Translation -->
+            <div class="text-lg font-bold text-emerald-400 mb-3">${w.uzbek}</div>
 
-            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200/90 text-xs mb-3 leading-relaxed">
+            <!-- Mnemonics (Xotira kaliti) -->
+            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs mb-3 leading-relaxed">
               <div class="font-bold flex items-center gap-1.5 text-amber-300 mb-1">
                 <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i> Xotira Kaliti (Mnemonika):
               </div>
               ${w.mnemonic}
             </div>
 
-            <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 text-xs text-slate-300 mb-3 space-y-1">
+            <!-- Example Sentences -->
+            <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 text-xs text-slate-300 mb-3 space-y-1">
               <p class="font-medium text-slate-200">“${w.sentenceEn}”</p>
               <p class="text-slate-400 italic">“${w.sentenceUz}”</p>
             </div>
           </div>
 
-          <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
-            <button onclick="window.app.toggleLearned(${w.id})" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-              isL ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40' : 'bg-indigo-600 text-white hover:bg-indigo-500'
+          <!-- Bottom Action: Yodladim -->
+          <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+            <button onclick="window.app.toggleLearned(${w.id})" class="w-full py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+              isL ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/40' : 'bg-indigo-600 text-white hover:bg-indigo-500'
             }">
               <i data-lucide="${isL ? 'check-circle-2' : 'circle'}" class="w-4 h-4"></i>
               ${isL ? "Yodlangan (+10 XP)" : "Yodladim deb belgilash"}
@@ -645,7 +536,13 @@ class VocabMasterController {
       `;
     }).join('');
 
-    container.innerHTML = topFilterHtml + `<div class="grid grid-cols-1 md:grid-cols-2 gap-5">${cardsHtml}</div>`;
+    container.innerHTML = `
+      <div class="mb-4 flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
+        <span>Kunlik 100 ta so'z ro'yxati (1 - 100):</span>
+        <span class="text-emerald-400 font-bold">Yodlangan: ${this.dayWords.filter(w => storageDriver.isLearned(w.id)).length} / 100</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${cardsHtml}</div>
+    `;
   }
 
   // 2. 3D FLASHCARDS (ACTIVE RECALL)
