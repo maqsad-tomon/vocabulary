@@ -139,15 +139,66 @@ class LexiconDatabase {
 
         const capWord = finalWord.charAt(0).toUpperCase() + finalWord.slice(1);
 
+        // Haqiqiy lug'at ma'lumotlari bazasi
+        const DICT = {
+          "abandon": { uz: "tashlab ketmoq, tark etmoq", mn: "⚡ 'Bandam' - Ey bandam, zararli odatlaringni butunlay TASHAB KET!", sEn: "He had to abandon his car in the snowstorm.", sUz: "U qor bo'ronida mashinasini tashlab ketishga majbur bo'ldi." },
+          "accelerate": { uz: "tezlashtirmoq, tezlikni oshirmoq", mn: "⚡ 'Akselerator' - Mashinadagi gaz pedali tezlikni TEZLASHTIRADI.", sEn: "Daily reading will accelerate your progress.", sUz: "Har kungi mutolaa sizning rivojlanishingizni tezlashtiradi." },
+          "accomplish": { uz: "muvaffaqiyatli bajarmoq, erishmoq", mn: "⚡ 'Kompyuter ish' - Kompyuterdagi qiyin ishni BAJARDIM.", sEn: "You can accomplish any ambitious goal with persistence.", sUz: "Qat'iyat bilan har qanday yuksak maqsadga erisha olasiz." },
+          "achieve": { uz: "erishmoq, qo'lga kiritmoq", mn: "⚡ 'Ochib' - Yangi imkoniyatlar eshigini ochib, buyuk g'alabaga ERISHDI.", sEn: "She worked hard to achieve first place.", sUz: "U birinchi o'ringa erishish uchun qattiq mehnat qildi." },
+          "acquire": { uz: "orttirmoq, ega bo'lmoq, o'zlashtirmoq", mn: "⚡ 'Akvaryum' - Chiroyli akvaryum sotib olib, unga EGA BO'LDIK.", sEn: "Reading books helps you acquire wisdom.", sUz: "Kitob o'qish sizga donolik orttirishga ko'maklashadi." },
+          "adapt": { uz: "moslashmoq, ko'nikmoq", mn: "⚡ 'Adapter' - Adapter barcha rozetkalarga tezda MOSLASHADI.", sEn: "Successful people quickly adapt to change.", sUz: "Muvaffaqiyatli insonlar o'zgarishlarga tez moslashadilar." },
+          "adjust": { uz: "sozlamoq, to'g'rilamoq", mn: "⚡ 'Avto-just' - Ko'zguni o'zingizga qulay qilib SOZLANG.", sEn: "Adjust the volume to a comfortable level.", sUz: "Ovoz balandligini qulay darajaga sozlang." },
+          "administer": { uz: "boshqarmoq, ma'murlik qilmoq", mn: "⚡ 'Administrator' - Administrator butun tizimni BOSHQARADI.", sEn: "She was hired to administer the new program.", sUz: "U yangi dasturni boshqarish uchun ishga olindi." },
+          "admire": { uz: "qoyil qolmoq, havas qilmoq", mn: "⚡ 'Amir' - Amirning jasoratiga butun xalq HAVAS QILADI.", sEn: "I truly admire people who never give up.", sUz: "Taslim bo'lmaydigan insonlarga havas qilaman." },
+          "adopt": { uz: "qabul qilmoq; asrab olmoq", mn: "⚡ 'A-dop' - Yangi qoidani hamma bir ovozdan QABUL QILDI.", sEn: "The committee decided to adopt the proposal.", sUz: "Qo'mita taklifni qabul qilishga qaror qildi." },
+          "advance": { uz: "oldinga siljimoq, ilgarilamoq", mn: "⚡ 'Avans' - Avans olib, ishlarda oldinga ILGARILADI.", sEn: "Technology continues to advance rapidly.", sUz: "Texnologiya tez sur'atlarda ilgarilashda davom etmoqda." },
+          "advise": { uz: "maslahat bermoq, tavsiya etmoq", mn: "⚡ 'Adviser' - Maslahatchi to'g'ri yo'lni MASLAHAT BERADI.", sEn: "I advise you to start studying early.", sUz: "Sizga o'qishni ertaroq boshlashni maslahat beraman." },
+          "advocate": { uz: "yoqlab chiqmoq, himoya qilmoq", mn: "⚡ 'Advokat' - Advokat sudda haqiqatni HIMOYА QILADI.", sEn: "Doctors advocate healthy nutrition.", sUz: "Shifokorlar sog'lom ovqatlanishni yoqlaydilar." },
+          "affect": { uz: "ta'sir qilmoq, o'zgartirmoq", mn: "⚡ 'Effekt' - Yomon odat sog'liqqa salbiy TA'SIR QILADI.", sEn: "The weather can affect your overall mood.", sUz: "Ob-havo umumiy kayfiyatingizga ta'sir qilishi mumkin." },
+          "afford": { uz: "qurbi yetmoq, kuchi yetmoq", mn: "⚡ 'Ford' - Tejab oxiri Ford olishga QURBI YETDI.", sEn: "We cannot afford to waste valuable time.", sUz: "Qimmatli vaqtni behuda sarflashga qurbimiz yetmaydi." },
+          "alter": { uz: "o'zgartirmoq, qayta bichmoq", mn: "⚡ 'Almashtir' - Eskirgan rejani o'zgartirib yangisiga ALMASHTIR.", sEn: "You cannot alter the past, but you can build the future.", sUz: "O'tmishni o'zgartira olmaysiz, ammo kelajakni qura olasiz." },
+          "analyze": { uz: "tahlil qilmoq, o'rganmoq", mn: "⚡ 'Analiz' - Natijalarni sinchkovlik bilan TAHLIL QILDI.", sEn: "Carefully analyze the survey data.", sUz: "So'rovnoma ma'lumotlarini diqqat bilan tahlil qiling." },
+          "announce": { uz: "e'lon qilmoq, ma'lum qilmoq", mn: "⚡ 'Anons' - Yangi kino premyerasini E'LON QILISHDI.", sEn: "They will announce the exam results tomorrow.", sUz: "Ular ertaga imtihon natijalarini e'lon qiladilar." },
+          "anticipate": { uz: "oldindan sezmoq, kutmoq", mn: "⚡ 'Antenna' xavfni OLDINDAN SEZIB ogohlantirdi.", sEn: "We anticipate sunny weather tomorrow.", sUz: "Ertaga quyoshli ob-havoni kutyapmiz." },
+          "appear": { uz: "paydo bo'lmoq, ko'rinmoq", mn: "⚡ 'Apar' - Qorong'uda to'satdan yorug'lik PAYDO BO'LDI.", sEn: "A bright rainbow appeared in the blue sky.", sUz: "Moviy osmonda yorqin kamalak paydo bo'ldi." },
+          "apply": { uz: "qo'llamoq, ariza bermoq", mn: "⚡ 'App' - Yangi mobil ilovani amalda QO'LLADIK.", sEn: "Apply these new words in your daily speech.", sUz: "Ushbu yangi so'zlarni kundalik nutqingizda qo'llang." },
+          "appoint": { uz: "tayinlamoq, belgilamoq", mn: "⚡ 'Point' - Kerakli nuqtaga yangi rahbarni TAYINLADI.", sEn: "They appointed a skilled engineer as manager.", sUz: "Ular tajribali muhandisni boshqaruvchi etib tayinladilar." },
+          "appreciate": { uz: "qadrlamoq, minnatdor bo'lmoq", mn: "⚡ 'Apparat' yordamida berilgan yaxshilikni QADRLANG.", sEn: "I deeply appreciate your kind assistance.", sUz: "Mehribon yordamingizni chin dildan qadrlayman." },
+          "approach": { uz: "yaqinlashmoq; yondashuv", mn: "⚡ 'Oproch' - Manzil sari asta-sekin YAQINLASHDI.", sEn: "We need a creative approach to solve this puzzle.", sUz: "Bu jumboqni yechish uchun bizga ijodiy yondashuv kerak." },
+          "approve": { uz: "ma'qullamoq, tasdiqlamoq", mn: "⚡ 'Oq plash' - Taklif etilgan loyihani hamma MA'QULLADI.", sEn: "The manager approved our new proposal.", sUz: "Menejer bizning yangi taklifimizni ma'qulladi." },
+          "benevolent": { uz: "saxovatli, mehribon", mn: "⚡ 'Benuqson' dildan barchaga yaxshilik istovchi MEHRIBON inson.", sEn: "A benevolent mentor guided him throughout life.", sUz: "Saxovatli ustoz unga butun hayoti davomida yo'l ko'rsatdi." },
+          "candid": { uz: "samimiy, ochiqko'ngil", mn: "⚡ 'Kandidat' intervyuda o'ta SAMIMIY gapirdi.", sEn: "She gave a candid and honest interview.", sUz: "U samimiy va to'g'riso'z intervyu berdi." },
+          "charismatic": { uz: "jozibali, karizmatik", mn: "⚡ 'Karizma' - Odamlarni o'ziga maftun etuvchi JOZIBALI yetakchi.", sEn: "A charismatic speaker inspired the whole audience.", sUz: "Jozibali notiq butun zalni ilhomlantirdi." },
+          "compassionate": { uz: "rahmdil, shafqatli", mn: "⚡ 'Kompas' - Qalbi doim ezgulikka yetaklovchi RAHMDIL inson.", sEn: "Doctors are deeply compassionate toward patients.", sUz: "Shifokorlar bemorlarga nisbatan nihoyatda shafqatlidir." },
+          "courteous": { uz: "xushmuomala, odobli", mn: "⚡ 'Kortej' kutib oluvchilari juda XUSHMUOMALA bo'ladi.", sEn: "Always remain courteous to all guests.", sUz: "Barcha mehmonlarga doim xushmuomala bo'ling." },
+          "diligent": { uz: "tirishqoq, quntli", mn: "⚡ 'Dil bilan' - Dil bilan o'rganuvchi TIRISHQOQ talaba.", sEn: "Diligent learners reach fluency much faster.", sUz: "Tirishqoq o'quvchilar ravonlikka ancha tez erishadilar." },
+          "empathetic": { uz: "hamdard, tushunuvchan", mn: "⚡ 'Empatiya' - Boshqalarning dardini his qiluvchi HAMDARD do'st.", sEn: "Empathetic friends listen patiently without judging.", sUz: "Hamdard do'stlar hukm qilmasdan, sabr bilan tinglaydilar." },
+          "generous": { uz: "saxiy, qo'li ochiq", mn: "⚡ 'General' jangchilarga mukofot ulashuvchi SAXIY inson.", sEn: "He is generous with his time and valuable advice.", sUz: "U o'z vaqti va qimmatli maslahatini ayamaydigan saxiy inson." },
+          "appliance": { uz: "maishiy texnika jihozi", mn: "⚡ 'Pleyer, plita' - Oshxona va uydagi qulay JIXOZLAR.", sEn: "Modern household appliances save valuable kitchen time.", sUz: "Zamonaviy maishiy jihozlar oshxonadagi qimmatli vaqtni tejaydi." },
+          "chore": { uz: "kundalik uy yumushi", mn: "⚡ 'Chora' - Xona tozalash kabi kundalik UY YUMUSHINI bajardi.", sEn: "Sharing household chores keeps peace in the family.", sUz: "Uy yumushlarini bo'lishish oilada tinchlikni ta'minlaydi." },
+          "colleague": { uz: "hamkasb, kasbdosh", mn: "⚡ 'Kollektiv'dagi birga ishlaydigan HAMKASB.", sEn: "My colleagues are very helpful and supportive.", sUz: "Mening hamkasblarim juda yordamsevar va qo'llab-quvvatlovchidir." },
+          "deadline": { uz: "topshirish muddati, dedlayn", mn: "⚡ 'Dedlayn' - Loyihani yakunlashning OXIRGI MUDDATI.", sEn: "We met the project deadline with days to spare.", sUz: "Biz loyiha muddatiga bir necha kun oldin ulgurdik." },
+          "asset": { uz: "aktiv, qimmatli mulk", mn: "⚡ 'Asosiy boylik' - Bilim insonning eng katta AKTIVIDIR.", sEn: "Knowledge and skills are your greatest asset.", sUz: "Bilim va ko'nikmalar sizning eng buyuk aktivingizdir." },
+          "algorithm": { uz: "algoritm, hisoblash ketma-ketligi", mn: "⚡ Al-Xorazmiy bobomiz kashf etgan hisob-kitob QOIDASI.", sEn: "Search algorithms find data in milliseconds.", sUz: "Qidiruv algoritmlari ma'lumotlarni millisoniyalarda topadi." }
+        };
+
+        const wordKey = rawWord.toLowerCase().replace(/[^a-z]/g, '');
+        const entry = DICT[wordKey];
+
+        const uzbekMeaning = entry ? entry.uz : `${capWord} — ingliz tilidagi muhim lug'at birligi`;
+        const mnemonicText = entry ? entry.mn : `⚡ Xotira kaliti: '${capWord}' so'zini '${topic.title}' mavzusidagi jonli harakat bilan eslab qoling.`;
+        const sentenceEnglish = entry ? entry.sEn : `Mastering '${capWord}' will greatly improve your English for ${topic.title}.`;
+        const sentenceUzbek = entry ? entry.sUz : `'${capWord}' so'zi ${topic.title} mavzusida faol qo'llaniladi.`;
+
         dayWords.push({
           id: id,
           word: capWord,
-          ipa: `/${rawWord.toLowerCase().replace(/[^a-z]/g, '')}/`,
+          ipa: `/${wordKey}/`,
           partOfSpeech: i % 3 === 0 ? "verb" : (i % 3 === 1 ? "noun" : "adj"),
-          uzbek: `${capWord} — ${topic.title} doirasidagi muhim so'z`,
-          mnemonic: `⚡ Xotira kaliti: '${capWord}' so'zini '${topic.title}' mavzusi bilan bog'lang.`,
-          sentenceEn: `Studying '${capWord}' will expand your English vocabulary for ${topic.title}.`,
-          sentenceUz: `'${capWord}' so'zi ${topic.title} mavzusida faol ishlatiladi.`,
+          uzbek: uzbekMeaning,
+          mnemonic: mnemonicText,
+          sentenceEn: sentenceEnglish,
+          sentenceUz: sentenceUzbek,
           dayNumber: day
         });
       }
